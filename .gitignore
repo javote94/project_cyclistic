@@ -1,0 +1,15 @@
+# Ignorar todos los archivos CSV dentro de las carpetas específicas
+data/raw/csv/*.csv
+data/processed/csv/*.csv
+
+# No ignorar archivos .gitkeep
+!data/raw/csv/.gitkeep
+!data/processed/csv/.gitkeep
+
+# Archivos de RStudio que no se deben incluir
+.Rproj.user
+.Rhistory
+.RData
+
+config.yml
+secret/

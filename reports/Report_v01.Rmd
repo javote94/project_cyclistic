@@ -1,0 +1,459 @@
+---
+title: "Caso práctico: análisis del servicio de bicicletas compartidas de la empresa Cyclistic"
+author: "Javier Rameri"
+date: "2024-03-24"
+output:
+  html_document:
+    css: ../scripts/css/styles.css
+    toc: true
+    toc_depth: 4
+---
+
+
+---
+
+## Introducción
+
+El caso práctico que veremos a continuación forma parte del proyecto final del curso de Certificado de análisis computacional de datos de Google, dictado en convenio con la plataforma educativa Coursera. El mismo se centra en el análisis de datos para una empresa ficticia llamada Cyclistic que ofrece servicios de bicicletas compartidas en la ciudad de Chicago, Illinois, Estados Unidos.
+
+Si bien tanto el escenario planteado como las partes interesadas que conforman este proyecto son ficticias, los conjuntos de datos empleados en este análisis son reales y están disponibles públicamente en este [enlace](https://divvy-tripdata.s3.amazonaws.com/index.html). Estos datos son suministrados por la empresa Divvy bajo una [licencia](https://divvybikes.com/data-license-agreement), que permite su uso según los términos especificados.
+
+
+### Sobre la empresa Cyclistic
+
+La compañía en cuestión opera una flota de 5.824 bicicletas georreferenciadas disponibles en 692 estaciones que se encuentran distribuidas en toda la ciudad, permitiendo a los usuarios desbloquear bicicletas desde una estación y devolverlas en cualquier otra del sistema.
+
+Desde 2016, ha logrado atraer a un amplio segmento de consumidores mediante una estrategia de precios flexible, incluyendo pases de un solo viaje, pases de un día completo y membresías anuales. 
+
+Cabe aclarar que a los clientes que compran pases de un solo viaje o pases de un día completo se los considera **ciclistas ocasionales** y aquellos que compran membresías anuales se los califica como **socios o miembros anuales**.
+
+
+### Objetivo del proyecto de análisis
+
+Aunque la flexibilidad de precios ayuda a Cyclistic a captar más clientes, los analistas financieros creen que maximizar el número de miembros anuales será clave para el crecimiento futuro de la empresa. 
+
+Consecuentemente, la directora de marketing propone una reorientación estratégica del área. Sugiere enfocar las campañas no en atraer nuevos clientes, sino en incrementar la conversión de ciclistas ocasionales a miembros anuales, aprovechando su familiaridad previa con el servicio de Cyclistic.
+
+En concreto, la directora estableció una meta clara: **maximizar la cantidad de membresías anuales a través del diseño de estrategias de marketing para promover la conversión de los clientes ocasionales a miembros anuales**.
+
+El equipo de analistas de marketing de la empresa se plantea una serie de preguntas para abordar el desafío:
+
+1. ¿En qué se diferencian los socios anuales y los ciclistas ocasionales con respecto al uso de las bicicletas de Cyclistic?
+
+2. ¿Por qué los ciclistas ocasionales comprarían membresías anuales de Cyclistic?
+
+3. ¿Cómo puede usar Cyclistic los medios digitales para influenciar a los ciclistas ocasionales a convertirse en miembros?
+
+
+### Pregunta empresarial a responder
+
+Ahora bien, la directora del área nos encomienda responder la primera pregunta; esta es **determinar las principales diferencias entre los miembros anuales y los ciclistas ocasionales en cuanto al uso del servicio de las bicicletas de Cyclistic**.
+
+Para responderla, procedemos a explorar y analizar los datos históricos de viajes en bicicleta de los usuarios para identificar tendencias y patrones en el uso del servicio entre socios anuales y ciclistas ocasionales.
+
+
+### Fuentes de datos
+
+Para llevar a cabo la tarea se descargaron los conjuntos de datos sobre los viajes efectuados durante los últimos doce meses previos a la fecha de realización del presente caso (marzo 2023 a febrero 2024), según lo exigido en la consigna del proyecto. Como mencionamos anteriormente, los datos fueron obtenidos del sitio web de la empresa que opera el servicio de bicicletas compartidas en la ciudad de Chicago, EEUU. Los datos son publicados por la compañía con una periodicidad mensual, lo que garantiza la disponibilidad de información actualizada a efectos de responder la pregunta con cierto grado de confiabilidad.
+
+Los bases tienen un formato estructurado (organizado en filas y columnas) y contienen datos tanto cuantitativos como cualitativos. Además, son de formato ancho ya que cada viaje es computado como una única fila y con múltiples columnas para albergar los atributos de dicho registro.
+
+También es importante remarcar que los datos ya vienen anonimizados, es decir, se encuentra preservada la información personal y financiera del usuario que hace uso del servicio.
+
+
+### Preparación del entorno de trabajo
+
+Para asegurar un análisis eficiente y reproducible, he configurado mi entorno de desarrollo en RStudio, la interfaz gráfica más popular para el lenguaje de programación R, conocida por su capacidad de integrar cómodamente scripts, visualización de datos y resultados en un solo lugar.
+
+Para este proyecto utilizo R versión 4.3.2. Esta garantiza la compatibilidad con todas las librerías utilizadas.
+
+Se han instalado y cargado las siguientes librerías:
+
+- **`tidyverse`**: Colección de paquetes para manipulación y visualización eficiente de datos.
+- **`ggplot2`**: Crea visualizaciones de datos complejas y estéticamente atractivas.
+- **`geosphere`**: Proporciona herramientas para calcular distancias y áreas geográficas.
+- **`janitor`**: Facilita la limpieza de datos y manejo de tablas.
+- **`skimr`**: Ofrece resúmenes estadísticos rápidos de las columnas de un dataframe.
+- **`here`**: Ayuda a manejar rutas de archivos en proyectos, simplificando la construcción de rutas.
+- **`glue`**: Permite la interpolación de cadenas de texto de forma sencilla y clara.
+- **`openxlsx`**: Facilita la lectura y escritura de archivos Excel.
+
+Cabe mencionar que los scripts del proyecto siguen una convención de codificación estricta para garantizar que el código sea legible y mantenible. Esto incluye el uso adecuado de comentarios, la nominación consistente de variables y funciones, y la estructuración lógica del código. En el repositorio de GitHub se encuntra alojado el código de cada script si se desea consultar.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+source("../scripts/r/setup_packages.R")
+source("../scripts/r/data_import.R")
+source("../scripts/r/data_verification.R")
+source("../scripts/r/data_cleaning.R")
+source("../scripts/r/data_analysis.R")
+source("../scripts/r/excel_script.R")
+source("../scripts/r/data_visualization.R")
+```
+
+---
+
+## Preparación de datos
+
+Se procedió a descargar las bases de datos csv e importarlas en el entorno del IDE RStudio ya que, como mencionamos, el lenguaje R será la herramienta principal de trabajo en todo el proceso de análisis de datos y elaboración de visualizaciones.
+
+Personalizamos una función llamada **`import_data_csv()`** para encapsular el código relacionado con el procedimiento de importación de todos los datasets descargados que se encuentran alojados en una ruta relativa del proyecto. Estos terminan almacenados en una lista de dataframes para facilitar la manipulación de los datos (**`df_list`**).
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+df_list <- import_data_csv("../data/raw/csv/")
+```
+
+En principio, los campos o atributos que disponen los conjuntos de datos son los siguientes:
+
+- **ride_id**: Identificador único para cada viaje.
+- **rideable_type**: Tipo de bicicleta.
+-	**started_at**: Fecha y hora de inicio del viaje.
+-	**ended_at**: Fecha y hora de fin del viaje.
+-	**start_station_name**: Nombre de la estación de bicicletas de inicio.
+-	**start_station_id**: Identificador de la estación de bicicletas de inicio.
+-	**end_station_name**: Nombre de la estación de bicicletas de destino.
+-	**end_station_id**: Identificador de la estación de bicicletas de destino.
+-	**start_lat**: Latitud de inicio.
+-	**start_lng**: Longitud de inicio.
+-	**end_lat**: Latitud de destino.
+-	**end_lng**: Longitud de destino.
+-	**member_casual**: Indica si el usuario es un miembro anual o un cliente ocasional.
+
+Ahora bien, como paso previo a la combinación de los datasets para iniciar las tareas de limpieza y análisis, debemos constatar la compatibilidad entre ellos de modo que podamos garantizar la consistencia en los conjuntos de datos que serán combinados. Para esto, creamos una función denominada **`check_compatibility()`**.
+
+La función `check_compatibility()` verifica la uniformidad entre múltiples dataframes para asegurar una integración sin conflictos. Este proceso incluye comprobar que todos los dataframes tengan la misma cantidad de columnas, que las columnas estén en el mismo orden y posean el mismo nombre, así como asegurarse de que los tipos de datos sean consistentes a través de los conjuntos de datos. En caso de encontrar discrepancias, la función alerta al usuario sobre el incumplimiento de alguna de las condiciones mencionadas. Este paso es crucial para evitar errores en el análisis subsiguiente, garantizando que las operaciones se realicen sobre datos homogéneos.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+check_compatibility(df_list)
+```
+
+La función nos ha retornado mensajes de confirmación acerca de los resultados en las tareas de verificación y, finalmente, convalida la compatibilidad de todos los dataframes.
+
+Ahora sí, habiendo cumplimentado con éxito el proceso de verificación, procedemos a unir los doce datasets en uno solo utilizando la función **`bind_rows()`**.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+df <- bind_rows(df_list)
+```
+
+En principio, el dataframe combinado contiene 5.707.168 filas y 13 columnas. 
+```{r}
+dim(df)
+```
+
+Complementariamente, acudimos a la función **`verify_data()`** que creamos a efectos de realizar una lectura simplificada de las principales características del dataframe; estas son:
+
+- Cantidad y porcentaje de filas del dataframe agrupadas por año y mes. Así tenemos una visión general de la distribución temporal de los datos que disponemos.
+- Nombre de la columna, tipo de dato y cantidad de valores nulos (NA) existentes en cada una. 
+- Valores únicos presentes en la columna `member_casual`. Esta columna será relevante para nuestra tarea de análisis, por ende, es importante verificar la inexistencia de casos atípicos.
+
+```{r}
+verify_data(df)
+```
+
+Del resumen anterior se desprende, en primer lugar, la cantidad de registros del dataframe desglosado por mes y año. Se puede constatar que el corte temporal es coincidente con el período de tiempo que pretendemos analizar. Cabe mencionar que se verifica una sobrerepresentación de los viajes efectuados en los meses de mayo, junio, julio, agosto y septiembre. Se profundizará sobre este tema en capítulos posteriores.
+
+Por otra parte, podemos observar que de las 13 columnas del dataframe, 7 son de tipo caracter, 4 de tipo numérico y 2 de tipo fecha. Además, pone en evidencia la existencia de valores nulos o vacíos, mayoritariamente en los campos `start_station_name`, `start_station_id`, `end_station_name` y `end_station_id`. La presencia de valores nulos en esos campos es irrelevante para las preguntas de investigación específicas ya que no resultarán ser un impedimento para calcular las distancias recorridas en cada viaje, los cuales se obtienen a partir de las columnas que representan las coordenadas geográficas de inicio y fin del recorrido (latitud y longitud).
+
+Por último, al identificar los valores únicos presentes en el campo `member_casual`, se puede constatar que no existen valores atípicos con respecto a la variedad de tipos de usuarios que esperamos encontrar (miembros anuales y clientes ocasionales).
+
+Hasta aquí fue todo lo relacionado con la preparación y exploración general del conjunto de datos que se empleará como insumo para abordar la tarea empresarial. En el próximo paso procederemos a realizar las labores de limpieza y transformación de estos datos para garantizar que el resultado de nuestro análisis sea consistente y confiable.
+
+---
+
+## Limpieza y transformación de datos
+
+Este capítulo detalla las funciones empleadas para mejorar la calidad del dataframe, eliminando inconsistencias y preparando los datos para análisis avanzados. Las tareas incluyen la remoción de registros con valores atípicos y la integración de nuevas columnas que proporcionan categorías útiles para nuestro análisis.
+
+Las tareas de limpieza y transformación aplicadas son las siguientes:
+
+
+1. `delete_duplicate_rows_by_id()`: Esta función elimina registros duplicados basándose en el campo `ride_id`, asegurando que cada viaje sea único.
+```{r}
+df <- delete_duplicate_rows_by_id(df)
+```
+
+2. `remove_extra_spaces_in_strings()`: Remueve espacios adicionales al inicio, final y entre palabras en las columnas de texto, lo que facilita la uniformidad y comparabilidad de los datos textuales.
+```{r}
+df <- remove_extra_spaces_in_strings(df)
+```
+
+3. `clean_coordinates()`: Elimina registros con coordenadas de inicio o destino inválidas (valores nulos o cero), asegurando la precisión geográfica de los datos de localización de las estaciones de bicicletas.
+```{r}
+df <- clean_coordinates(df)
+```
+
+4. `clean_travel_dates()`: Descarta viajes donde la fecha de inicio es igual o posterior a la fecha de finalización del recorrido, garantizando que todos los registros tengan duraciones positivas y lógicas.
+```{r}
+df <- clean_travel_dates(df)
+```
+
+5. `add_column_trip_distance()`: Inserta una columna que calcula la distancia en metros entre las estaciones de inicio y destino, utilizando las coordenadas geográficas, proporcionando una métrica clave para el análisis del uso de las bicicletas.
+
+6. `add_column_trip_duration()`: Añade una columna que mide la duración del viaje en minutos, derivada de la diferencia entre las horas de inicio y fin del viaje
+
+7. `add_column_speed_kmh()`: insertar nueva columna que calcula la velocidad del viaje en kilómetros por hora, basada en la distancia del viaje y su duración. Esto proporciona una medida de la rapidez con la que se completan los viajes.
+```{r}
+df <- add_column_trip_distance(df)
+df <- add_column_trip_duration(df)
+df <- add_column_speed_kmh(df)
+```
+
+8. `delete_short_trips()`: Filtra y elimina viajes con una duración menor a un minuto, considerados no significativos para el análisis de comportamiento de los usuarios en cuanto al uso del servicio de bicicletas. Este umbral se establece basándose en que viajes de tan corta duración probablemente resulten de errores en el registro o de usuarios probando las bicicletas sin realizar un recorrido significativo. Al eliminar estos datos, aseguramos que el análisis se centre en patrones de uso genuinos y representativos.
+```{r}
+df <- delete_short_trips(df)
+```
+
+9. `delete_redundant_trips()`: Descarta viajes que empiezan y terminan en la misma estación bajo dos condiciones específicas: duración menor a dos minutos o una distancia registrada mayor a diez metros, ayudando a eliminar errores o registros no intencionales.
+```{r}
+df <- delete_redundant_trips(df)
+```
+
+10. `delete_atypical_trips()`: Excluye viajes con velocidades extremadamente altas, los cuales pueden indicar errores en los datos o uso atípico de las bicicletas.
+```{r}
+df <- delete_atypical_trips(df)
+```
+
+11. `add_column_route()`: Combina los nombres de las estaciones de inicio y destino para formar una descripción textual de la ruta de cada viaje.
+
+12. `add_column_month_year()`: Inserta la fecha (mes y año) del viaje basada en la fecha de inicio del recorrido, útil para análisis temporales y tendencias estacionales.
+
+13. `add_column_day_of_week()`: Agrega el día de la semana del viaje, proporcionando información sobre la preferencia de uso según el día.
+
+14. `add_column_hour()`: Añade la hora del día en que se realizó el viaje, clave para entender los patrones de tráfico y preferencias horarias.
+```{r}
+df <- add_column_route(df)
+df <- add_column_month_year(df)
+df <- add_column_day_of_week(df)
+df <- add_column_hour(df)
+```
+
+15. `add_column_decile_trip_distance()` y `add_column_decile_trip_duration()`: Categoriza la distancia y duración de los viajes en deciles, permitiendo análisis segmentados y detallados del comportamiento del usuario.
+```{r}
+df <- add_column_decile_trip_distance(df)
+df <- add_column_decile_trip_duration(df)
+```
+
+16. `delete_useless_columns()`: Remueve columnas del dataframe que no serán necesarias para el análisis. Estos son: `start_station_id`, `end_station_id`, `started_at` y `ended_at`.
+```{r}
+df_clean <- delete_useless_columns(df)
+```
+
+Al finalizar el procedimiento verificamos que quedaron 5.503.819 filas y 18 columnas; esto implica que el proceso de limpieza derivó en una reducción de 203.349 registros, lo que representa un 3,56% del total de datos si lo cotejamos con el dataframe inicial.
+```{r}
+dim(df_clean)
+```
+
+A modo de cierre, proporcionamos una vista estructural del dataframe limpio, que será la base para el análisis de datos en el próximo capítulo.
+```{r}
+str(df_clean)
+```
+
+
+---
+
+## Análisis de datos
+
+```{r include=FALSE}
+library(knitr)
+library(kableExtra)
+```
+
+```{r include=FALSE}
+table_1 <- summary_monthly_distribution_trips(df_clean)
+table_2 <- summary_trips_duration_by_client(df_clean)
+table_3 <- summary_trips_distance_by_client(df_clean)
+table_4 <- summary_trips_by_client_and_month(df_clean)
+table_5 <- summary_trips_duration_by_client_and_month(df_clean)
+table_6 <- summary_trips_by_client_and_day(df_clean)
+table_7 <- summary_trips_duration_by_client_and_day(df_clean)
+table_8 <- summary_trips_by_client_day_month(df_clean)
+table_9 <- summary_trips_duration_by_client_day_month(df_clean)
+table_10 <- summary_trips_avg_duration_by_client_and_day(df_clean)
+table_11 <- summary_trips_by_client_and_hour(df_clean)
+table_12 <- summary_trips_by_client_and_rideable(df_clean)
+```
+
+
+El próximo paso será realizar un breve análisis de los datos limpios que tenemos a disposición. Las tablas y los gráficos que presentaremos a continuación serán un insumo fundamental para identificar tendencias o patrones en los datos históricos sobre viajes de los clientes a efectos de extraer información valiosa que pueda dar respuesta a la tarea que se nos asignó en un principio. 
+
+Recordemos que nuestro objetivo en este caso es reconocer las principales diferencias entre los miembros anuales y los ciclistas ocasionales en cuanto al uso del servicio de las bicicletas de Cyclistic en la ciudad de Chicago, EEUU.
+
+### Distribución mensual de los viajes en los últimos doce meses
+
+En primer lugar, a modo de tener una comprensión sobre la distribución mensual de los datos que conforman la serie anual que estaremos analizando, exhibimos el siguiente gráfico:
+
+**Gráfico 1. Incidencia relativa de la cantidad de registros de cada mes sobre el total de datos. Mar-23 a Feb-24**
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_1 %>%
+  graph_bar_xmonth_ypercentage() +
+  labs(
+    x = "Year-Month",
+    y = "% of total trips", 
+    title = "Monthly distribution of trips in the data set. March 2023 to February 2024")
+```
+
+Como mencionamos anteriormente, los datos reflejan una sobrerepresentación de los viajes en los meses de mayo, junio, julio, agosto y septiembre. Este período coincide precisamente con la temporada de verano en la ciudad de Chicago, una época caracterizada por un clima más cálido y condiciones propicias para actividades al aire libre, lo que naturalmente fomenta el uso de bicicletas compartidas.
+
+### Incidencia de los grupos de clientes en el uso del servicio
+
+Ahora bien, para conocer la ponderación de los usuarios con membresía anual y clientes ocasionales en la cantidad de viajes y en las horas de viaje acumuladas entre marzo 2023 y febrero 2024, presentamos la siguiente tabla:
+
+**Tabla 1. Cantidad de viajes, horas de viaje acumuladas y duración promedio del viaje (en minutos) de los usuarios de Cyclistic, según tipo de cliente. Mar-23 a Feb-24** 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kable(table_2, "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, 
+                position = "left") %>%
+  column_spec(1, bold = T, color = "blue")
+```
+
+Como bien se observa, en el período analizado el 64,4% de los más de 5.5 millones de viajes correspondieron a clientes con membresía anual, al tiempo que los ciclistas ocasionales representaron el 35,6%. Fíjese que si nos enfocamos en la cantidad de horas de viaje acumuladas la diferencia entre uno y otro se reduce significativamente, alcanzando una ponderación relativamente similar en ambos grupos (51,4% vs 48,6%). La explicación a esto se vislumbra en la última columna de la tabla: los viajes en bicicleta de los clientes ocasionales suelen tener, en promedio, una duración mayor que el de los miembros anuales (21,4 vs 12,5 minutos).
+
+La siguiente tabla, análoga a la anterior, nos ofrece información sobre la distancia recorrida en kilómetros para cada tipo de cliente, tanto en términos acumulados como el promedio general.
+
+**Tabla 2. Cantidad de viajes y distancia recorrida en kilómetros en términos acumulados y promedio general de los usuarios de Cyclistic, según tipo de cliente. Mar-23 a Feb-24** 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kable(table_3, "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, 
+                position = "left") %>%
+  column_spec(1, bold = T, color = "blue")
+```
+
+Nótese que, en este caso, la incidencia relativa en los viajes de los ciclistas ocasionales sobre la distancia recorrida acumulada se mantiene proporcionalmente acorde a la cantidad de viajes realizados (35,9%). Es decir, no se aprecian diferencias en cuanto al recorrido entre ambas categorías de clientes en términos de desplazamiento de un punto a otro. De hecho, la distancias recorridas en promedio de ambos grupos son prácticamente iguales (2,17 km vs 2,19 km).
+
+De lo anterior se puede deducir que en el segmento de clientes ocasionales predominan los viajes de tipo recreativo, tratándose de trayectos más prolongados en términos de tiempo y a una menor velocidad, marcando un contraste con los viajes que persiguen un cierto grado de eficiencia en las distancias recorridas por parte de los clientes cotidianos con membresía.
+
+Téngase en cuenta que lo expuesto hasta aquí resultó ser una lectura de los datos en términos agregados. En adelante se procede a distribuir los datos temporalmente con el objetivo de identificar tendencias exhibidas por cada grupo de clientes a lo largo del período bajo análisis.
+
+### Tendencias estacionales en el uso del servicio en los últimos doce meses
+
+El siguiente gráfico aporta algunos elementos interesantes sobre el comportamiento estacional de los clientes en cuanto uso de las bicicletas del sistema.
+
+**Gráfico 2. Cantidad de viajes sobre el total del mes, según tipo de cliente. En porcentajes (%). Mar-23 a Feb-24**
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_4 %>%
+  graph_bar_xmonth_ypercentage_by_client() +
+  labs(x = "Year-Month",
+       y = "% of total trips",
+       fill = "Customer type",
+       title = "Number of trips (in %) by type of client. March 2023 to February 2024")
+
+```
+
+Si bien el gráfico muestra una mayor proporción de viajes realizados por miembros anuales durante todos los meses -del orden del 57% al 83%-, en los ciclistas ocasionales se observa un acentuado crecimiento estacional en el uso del servicio durante los meses de verano en la ciudad -desde abril hasta septiembre-, alcanzando su punto máximo en julio con una participación del 43% sobre el total de viajes del mes.
+
+A efectos de reforzar la comprensión sobre el comportamiento de ambos segmento de consumidores, exhibimos en el siguiente gráfico el crecimiento porcentual mes a mes de la cantidad de viajes según tipo de cliente.
+
+**Gráfico 3. Tasas de creimiento mensual de la cantidad de viajes realizados por los usuarios, según tipo de cliente. Mar-23 a Feb-24**
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_4 %>%
+  graph_line_xmonth_yvariation_by_client() +
+  labs(x = "Year-Month",
+       y = "Percentage variation in trips (%)",
+       colour = "Customer type",
+       title = "Evolution (in %) of the number of trips by type of customer. March 2023 to February 2024")
+```
+
+Nótese el exponencial crecimiento del uso de bicicletas por parte de los clientes casuales a partir de abril (136%), el cual fue tres veces superior al incremento percibido por el segmento de clientes con membrería (42%). Si bien a partir de entonces las tasas de crecimiento han ido desacelerándose hasta tornarse negativas entre agosto y septiembre, la tendencia exhibida en dicho período estuvo caracterizada por evidenciar aumentos en el tráfico de clientes casuales que duplicaban al de los miembros anuales (mayo: 60% vs 34%; junio: 29% vs 13%; julio: 10% vs 4%).
+
+El rasgo estacional del comportamiento descripto también se manifiesta en la última parte del año pero en sentido inverso. Es decir, en el marco de una caída generalizada del tráfico de clientes en el sistema que tiene lugar a partir de septiembre -mes en el que ambos segmentos de consumidores ven reducir su volumen de viajes-, el desplome de los viajes de los ciclistas ocasionales resultó ser más acentuado con relación al de los miembros (octubre: -32% vs -11%; noviembre: -44% vs -27%; diciembre: -48% vs -35%).
+
+En resumen, la utilización del servicio por parte de los miembros anuales a lo largo del año refleja un compromiso más sólido con la bicicleta como modo de transporte regular de manera más constante y con menos variación estacional. Por su parte, la variabilidad exhibida por parte de los clientes casuales implica un uso más orientado al ocio y dependiente del tiempo y las estaciones del año.
+
+Para reforzar esta hipótesis, los siguientes dos gráficos muestran la misma serie temporal pero adoptando como parámetro las horas de viaje acumuladas en cada mes:
+
+**Gráfico 4. Cantidad de horas de viaje acumuladas sobre el total del mes, según tipo de cliente. En porcentajes (%). Mar-23 a Feb-24**
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_5 %>%
+  graph_bar_xmonth_ypercentage_by_client() +
+  labs(x = "Year-Month",
+       y = "% of accumulated travel hours",
+       fill = "Customer type",
+       title = "Accumulated travel hours (in %) by type of client. March 2023 to February 2024")
+```
+
+Resulta elocuente la dinámica estacional anteriormente descripta desde esta perspectiva. De hecho, el segmento de clientes casuales muestran una participación relativamente mayor en los meses templados o cálidos (de mayo a septiembre), que gradualmente disminuye a medida que se acercan los meses más fríos.
+
+**Gráfico 5. Tasas de creimiento mensual de la cantidad de horas de viaje acumuladas, según tipo de cliente. Mar-23 a Feb-24**
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_5 %>%
+  graph_line_xmonth_yvariation_by_client_v02() +
+  labs(x = "Year-Month",
+       y = "Percentage variation in travel hours (%)",
+       colour = "Customer type",
+       title = "Evolution of the number of accumulated travel hours by type of customer.March 2023 to February 2024")
+```
+
+Las tasas de evolución que exhiben ambos segmentos de consumidores dan cuenta del componente estacional que tiene el uso del servicio de bicicletas compartidas y que, en mayor medida, se manifiesta en la intensidad de uso por parte de los clientes ocasionales.
+
+
+### Preferencia en el uso del servicio durante la semana
+
+En el siguiente gráfico ilustramos la proporción relativa de viajes de ambos segmentos de clientes en cada día de la semana:
+
+**Gráfico 6. Cantidad de viajes sobre el total del día de la semana según tipo de cliente. En porcentajes. Mar-23 a Feb-24**
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_6 %>%
+  graph_bar_xday_ypercentage_by_client() +
+  labs(x = "Day of week",
+       y = "% of total trips",
+       fill = "Customer type",
+       title = "Number of trips (%) by type of client and day of week")
+```
+
+Si bien la incidencia de viajes por parte de los clientes con membresía resulta ser mayoritaria en toda la semana, se puede constatar un incremento del tráfico de clientes ocasionales los sábados y domingos. En concreto, el volumen de viajes en los días hábiles se explican, en promedio, en un 70% por los miembros anuales y un 30% por los usuarios casuales. Dichas proporciones presentan modificaciones a medida que nos acercamos al fin de semana: para el viernes la relación porcentual pasa a ser del 63% vs 37%; en tanto que el sábado y domingo se reduce significativamente la brecha alcanzando a equipararse las proporciones entre ambos segmentos de consumidores (54% vs 46% en promedio).
+
+Esto sugiere que los miembros anuales utilizan el servicio principalmente para desplazamientos rutinarios, como el viaje al trabajo o a la escuela, que ocurren más comúnmente durante la semana laboral. En tanto los clientes casuales realizan viajes de ocio que se acentúa al final de la semana, y que podrían incluir actividades recreativas y de turismo.
+
+A modo de reforzar nuestras conclusiones sobre la dinámica descripta, se aprecia un gráfico similar pero contemplando la distribución de horas de viaje acumuladas.
+
+**Gráfico 7. Cantidad de horas de viaje acumuladas en cada día de la semana según tipo de cliente. En porcentajes. Mar-23 a Feb-24**
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_7 %>%
+  graph_bar_xday_ypercentage_by_client() +
+  labs(x = "Day of week",
+       y = "% of accumulated travel hours",
+       fill = "Customer type",
+       title = "Accumulated travel hours (in %) by type of client and day of week")
+```
+
+Los recorridos más extensos en términos de tiempo, siendo un rasgo característico de los viajes de ocio por parte de los clientes ocasionales, supone un sobredimensionamiento en la proporción relativa a la cantidad de horas de viaje acumuladas. Es más, si bien la dinámica es similar a la descripta en el gráfico N° 6, lo que se resalta en esta lectura es que la participáción mayoritaria durante el fin de semana la conserva el segmento de clientes ocasionales, ubicándose en el orden del 60% del total de horas acumuladas en viajes.
+
+
+### Preferencia horaria en el uso del servicio durante el día
+
+En el gráfico proporcionado, que muestra la distribución horaria de la cantidad de viajes realizados por tipo de cliente, observamos varias tendencias importantes que nos permiten comprender mejor los patrones de uso de los servicios de bicicletas compartidas:
+
+**Gráfico 8. Distribución horaria de la cantidad de viajes realizados por tipo de cliente. En porcentajes. Mar-23 a Feb-24**
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_11 %>%
+  graph_area_xhour_ypercentage_by_client() +
+  labs(x = "Hour of Day",
+       y = "Percentage of Total Trips",
+       fill = "Type of Customer",
+       title = "Hourly Distribution of Trips by Customer Type",
+       subtitle = "Proportion of total trips for each hour of the day")
+```
+
+
+Los clientes con membresía anual muestran un pico de actividad alrededor de las 8 a.m., lo cual sugiere un uso significativo de bicicletas para desplazamientos matutinos, posiblemente relacionados con el traslado al lugar de trabajo o estudios. Luego, hay un aumento gradual a lo largo del día, alcanzando el pico más
+alto alrededor de las 5 p.m., que podría corresponder al regreso a casa después del trabajo. Esta
+tendencia indica un patrón de uso rutinario y funcional del servicio durante los días laborables.
+
+Por otro lado, los clientes ocasionales tienen un uso predominantemente vespertino. El tráfico empieza a aumentar significativamente después del mediodía y alcanza su máximo entre las 5 p.m. y las 6 p.m. Esto indicaría un uso más recreativo del servicio concentrándose durante las horas de la tarde.
+
+La distinción entre los patrones de uso durante el día entre miembros y clientes ocasionales es notoria. Mientras que los miembros muestran dos picos relacionados con el horario laboral típico, los clientes ocasionales muestran un solo pico tardío, que no se alinea con los horarios de desplazamiento laboral, reforzando la idea de que utilizan las bicicletas más para actividades de ocio o no rutinarias.
+
+
+---
+
+## Recomendaciones a la directora de marketing
+ 
+En base al análisis realizado sobre los datos históricos de viajes de clientes entre marzo 2023 y febrero 2024 de la empresa Cyclistic, elaboramos algunas recomendaciones dirigidas a la gerente del área de marketing de la compañía centradas en promover estrategias que busquen acelerar potencialmentes las conversiones de usuarios ocasionales a miembros anuales, aprovechando las diferencias en el uso del servicio de bicicletas compartidas entre ambos. Nuestras recomendaciones son las siguientes:
+
+- Enfocarse en las campañas durante el verano: dado que los datos muestran un aumento en el uso del servicio por parte de los clientes casuales durante los meses de verano, se recomienda lanzar campañas de marketing dirigidas específicamente a estos usuarios en ese período. Estas campañas podrían incluir incentivos temporales o descuentos en la conversión a membresías anuales, resaltando los beneficios de ser miembro durante la temporada alta de ciclismo.
+
+- Promover el uso regular de las bicicletas entre los clientes casuales: considerando que los miembros utilizan el servicio de manera más constante a lo largo del año, las estrategias de marketing podrían enfocarse en mostrar a los clientes casuales los beneficios de usar las bicicletas para desplazamientos rutinarios, no solo durante el fin de semana. Se podría resaltar la comodidad, el ahorro en comparación con otros medios de transporte y los beneficios para la salud y el medio ambiente.
+
+- Paquetes de membresía de fin de semana: para los clientes que usan el servicio principalmente los fines de semana, podrían diseñarse paquetes de membresía especializados que ofrezcan tarifas con descuento para esos días, con la opción de actualizar a una membresía completa anual. El objetivo es fomentar un compromiso inicial lo más bajo que se pueda, y con el tiempo, convertirse en una membresía anual completa.
