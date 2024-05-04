@@ -54,3 +54,10 @@ Si estás interesado en contribuir a este proyecto, estamos abiertos a pull requ
 ## Agradecimientos
 Mis agradecimientos a Google y Coursera por proporcionar los datos y el contexto educativo para este análisis.
 
+
+## Certificación
+Este proyecto fue desarrollado como parte de mi formación en el curso `Certificado profesional de Análisis de Datos de Google`, ofrecido por Google y Coursera. La finalización exitosa de este curso está certificada:
+
+![Ver Certificado](https://github.com/javote94/project_cyclistic/blob/main/coursera_certificate/Coursera%20M3XCXKG3ZZ7Z_page-0001.jpg?raw=true)
+
+Este curso abarcó ampliamente temas y técnicas de análisis de datos que han sido aplicados en este proyecto.
