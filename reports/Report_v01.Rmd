@@ -18,6 +18,8 @@ El caso práctico que veremos a continuación forma parte del proyecto final del
 
 Si bien tanto el escenario planteado como las partes interesadas que conforman este proyecto son ficticias, los conjuntos de datos empleados en este análisis son reales y están disponibles públicamente en este [enlace](https://divvy-tripdata.s3.amazonaws.com/index.html). Estos datos son suministrados por la empresa Divvy bajo una [licencia](https://divvybikes.com/data-license-agreement), que permite su uso según los términos especificados.
 
+Si desea obtener más información y consultar el código fuente del proyecto, visite nuestro [repositorio de GitHub](https://github.com/javote94/project_cyclistic).
+
 
 ### Sobre la empresa Cyclistic
 
@@ -78,7 +80,7 @@ Se han instalado y cargado las siguientes librerías:
 - **`glue`**: Permite la interpolación de cadenas de texto de forma sencilla y clara.
 - **`openxlsx`**: Facilita la lectura y escritura de archivos Excel.
 
-Cabe mencionar que los scripts del proyecto siguen una convención de codificación estricta para garantizar que el código sea legible y mantenible. Esto incluye el uso adecuado de comentarios, la nominación consistente de variables y funciones, y la estructuración lógica del código. En el repositorio de GitHub se encuntra alojado el código de cada script si se desea consultar.
+Cabe mencionar que los scripts del proyecto siguen una convención de codificación estricta para garantizar que el código sea legible y mantenible. Esto incluye el uso adecuado de comentarios, la nominación consistente de variables y funciones, y la estructuración lógica del código. En el [repositorio de GitHub](https://github.com/javote94/project_cyclistic) se encuntra alojado el código fuente si se desea consultar.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 source("../scripts/r/setup_packages.R")
